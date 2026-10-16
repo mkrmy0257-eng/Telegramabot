@@ -1,0 +1,46 @@
+import os
+import telebot
+from openai import OpenAI
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+AI_API_KEY = os.getenv("AI_API_KEY")
+
+bot = telebot.TeleBot(BOT_TOKEN)
+client = OpenAI(api_key=AI_API_KEY)
+
+@bot.message_handler(commands=["start"])
+def start(message):
+    bot.reply_to(
+        message,
+        "سلام! 🤖 من دستیار هوشمند تو هستم. هر سؤالی داری بپرس."
+    )
+
+@bot.message_handler(func=lambda message: True)
+def answer(message):
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "تو یک دستیار هوشمند هستی. به فارسی روان و دقیق پاسخ بده."
+                },
+                {
+                    "role": "user",
+                    "content": message.text
+                }
+            ]
+        )
+
+        bot.reply_to(
+            message,
+            response.choices[0].message.content
+        )
+
+    except Exception:
+        bot.reply_to(
+            message,
+            "مشکلی پیش اومد! لطفاً دوباره تلاش کن."
+        )
+
+bot.infinity_polling()
